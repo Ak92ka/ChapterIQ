@@ -1,0 +1,16 @@
+.header-h1 {
+    text-align: center;
+}
+
+.footer-p {
+    text-align: center;
+}
+
+pre {
+  background-color: #f0f0f0; /* light grey */
+  padding: 1rem;
+  overflow-x: auto; /* horizontal scroll if needed */
+  white-space: pre-wrap; /* wrap long lines */
+  font-family: monospace;
+  border-radius: 6px;
+}
