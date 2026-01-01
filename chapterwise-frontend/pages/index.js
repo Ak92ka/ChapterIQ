@@ -21,7 +21,7 @@ export default function Home() {
     const minLength = 1000; // minimum characters for a chapter
     if (text.length < minLength) {
       setAiOutput(
-        `Your chapter is too short. Minimum length is ${minLength} characters.`
+        `Chapter is too short. Minimum length is ${minLength} characters.`
       );
       return;
     }
@@ -30,7 +30,7 @@ export default function Home() {
     const maxLength = 50000;
     if (text.length > maxLength) {
       setAiOutput(
-        `Error: Chapter is too long. Please split it into smaller sections (max 50,000 characters).`
+        `Chapter is too long. Please split it into smaller sections (max 50,000 characters).`
       );
       return;
     }

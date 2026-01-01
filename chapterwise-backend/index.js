@@ -30,10 +30,12 @@ function hashFunction(text) {
 app.post("/api/generate-notes", async (req, res) => {
   const { text, userId } = req.body;
 
-   // --- Backend validation: check empty text ---
-  if (!text || text.trim().length === 0) {
-    return res.status(400).json({ error: "Input cannot be empty." });
-  }
+   // Backend validation
+if (!text || text.trim().length === 0) {
+  console.log("Rejected empty input"); // <-- log
+  return res.status(400).json({ error: "Input cannot be empty." });
+}
+
 
 // --- Backend validation: check max length ---
   const MAX_LENGTH = 50000; // 50k characters
@@ -101,10 +103,12 @@ Output format (DO NOT CHANGE OR REORDER SECTIONS):
 
 Chapter Name:
 - Write the full chapter title exactly as provided.
+- If the textbook chapter does not provide a title, make one up that clearly summarizes the chapter content.
 
 
 Overview:
 - 2–3 sentences explaining the main idea of the chapter in clear, simple language.
+- If the main idea can be expressed in one long sentence, split it into multiple sentences for clarity.
 
 
 Chapter Summary:
@@ -113,7 +117,7 @@ Chapter Summary:
 
 
 Key Concepts:
-- Include AT LEAST 2, up to 5 key concepts.
+- Include AT LEAST 3, up to 5 key concepts.
 - Each bullet: Concept name + brief explanation (1–2 sentences).
 - Key concepts should focus on ideas, mechanisms, frameworks, or relationships, not formal term definitions.
 
@@ -125,12 +129,16 @@ Important Definitions:
 
 
 Exam Focus:
-- Include AT LEAST 4, up to 8 Q&A bullets.
-- Each bullet must be a complete Q&A using this format:
-- Q: [exam-style question]
-- A: [direct, exam-ready answer]
-- Questions must be phrased exactly as they would appear on undergraduate exams (define, explain, compare, discuss).
-- Prioritize the most important examinable points, but include additional relevant points if they exist.
+- Imagine you are a university professor creating exam questions for undergraduate students based on this chapter.
+- Create 4–8 concise Q&A pairs that cover the most important examinable concepts from the chapter.
+- Format each Q&A pair like this (no hyphen at start):
+Q1: [exam-style question]
+A: [clear, direct answer in 2–3 sentences]
+
+- Focus on clarity and conciseness rather than quoting directly from the text.
+- Include a mix of “define,” “explain,” “compare,” and “discuss” type questions.
+- Leave one empty line between each Q&A pair for readability.
+
 
 - Tone and constraints:
 - Write in simple, clear language suitable for undergraduate students.
