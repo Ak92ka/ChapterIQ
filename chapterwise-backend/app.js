@@ -3,6 +3,17 @@ import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
 import crypto from "crypto"; // for hashing chapter text
+import fs from "fs";
+// import { createRequire } from "module";
+// const require = createRequire(import.meta.url);
+import pkg from "pdfjs-dist/legacy/build/pdf.js"; 
+const { getDocument } = pkg;
+import multer from "multer";
+const upload = multer({ storage: multer.memoryStorage() });
+
+
+
+
 
 dotenv.config();
 
@@ -169,6 +180,28 @@ A: [clear, direct answer in 2–3 sentences]
   } catch (err) {
     console.error(err);
     res.status(500).json({ output: "Error generating notes" });
+  }
+});
+
+// ----------------- PDF Extraction Endpoint -----------------
+
+app.post("/api/extract-text", upload.single("file"), async (req, res) => {
+  try {
+    const fileBuffer = req.file.buffer; // directly from memory
+    const data = new Uint8Array(fileBuffer);
+    const pdf = await getDocument({ data }).promise;
+
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map((item) => item.str).join(" ") + "\n";
+    }
+
+    res.status(200).json({ text: fullText });
+  } catch (err) {
+    console.error("PDF parse error:", err);
+    res.status(500).json({ error: "Failed to extract text from PDF." });
   }
 });
 
