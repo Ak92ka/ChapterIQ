@@ -1,0 +1,104 @@
+.pricing-container {
+  padding: 0 20px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pricing-subtitle {
+  margin-top: 8px;
+  margin-bottom: 24px;
+  color: #555;
+  text-align: center;
+}
+
+.billing-toggle {
+  gap: 6px;
+  margin-bottom: 24px;
+  display: flex;
+  background: #e8e8e8;
+  border-radius: 20px;
+  padding: 9px 8px;
+}
+
+.billing-toggle button {
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #e8e8e8;
+  font-weight: 600;
+  cursor: pointer;
+  color: #666;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.billing-toggle .active {
+  background: #fff;
+  color: #000;
+}
+
+.pricing-card {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.amount {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.period {
+  font-size: 14px;
+  color: #666;
+}
+
+.save-text {
+  color: #8172f8;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.plan-desc {
+  margin-bottom: 32px;
+  color: #444;
+}
+
+.subscribe-btn {
+  background: #8172f8;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 32px;
+  cursor: pointer;
+}
+
+.features {
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+}
+
+.features label {
+        color: #A6A4A4;
+    font-size: 16px;
+    padding-bottom: 16px;
+    display: block;
+}
+
+.features p {
+  margin-bottom: 8px;
+}

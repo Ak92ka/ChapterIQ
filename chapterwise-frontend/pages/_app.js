@@ -6,6 +6,7 @@ import "../styles/app.css";
 import "../styles/about-us.css";
 import "../styles/terms-privacy.css"
 import "../styles/contact.css"
+import "../styles/pricing.css"
 
 
 export default function App({ Component, pageProps }) {
