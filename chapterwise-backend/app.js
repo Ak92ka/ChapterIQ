@@ -2,101 +2,104 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
-import crypto from "crypto"; // for hashing chapter text
+import crypto from "crypto";
 import fs from "fs";
-// import { createRequire } from "module";
-// const require = createRequire(import.meta.url);
-import pkg from "pdfjs-dist/legacy/build/pdf.js"; 
+import pkg from "pdfjs-dist/legacy/build/pdf.js";
 const { getDocument } = pkg;
 import multer from "multer";
 const upload = multer({ storage: multer.memoryStorage() });
-
-
-
-
+import signupHandler from "./auth/signup.js";
+import loginHandler from "./auth/login.js";
+import db from "./db.js";
 
 dotenv.config();
 
 const app = express();
-// const PORT = 5000;
-
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
-// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// // In-memory storage for daily usage
-// const dailyUsage = {}; // { userId: timestampOfLastRequest }
+function resetUsage(user) {
+  const now = new Date();
+  const today = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const thisMonth = now.toISOString().slice(0, 7); // YYYY-MM
 
-// const cache = {}; // { chapterHash: aiOutput }
+  if (user.dailyReset !== today) {
+    user.dailyCharacters = 0;
+    user.dailyReset = today;
+  }
 
-// Simple hash function for chapter text
-function hashFunction(text) {
-  return crypto.createHash("md5").update(text).digest("hex");
+  if (user.monthlyReset !== thisMonth) {
+    user.monthlyCharacters = 0;
+    user.monthlyReset = thisMonth;
+  }
 }
+
 
 app.post("/api/generate-notes", async (req, res) => {
-  const { text, userId } = req.body;
-
-   // Backend validation
-if (!text || text.trim().length === 0) {
-  console.log("Rejected empty input"); // <-- log
-  return res.status(400).json({ error: "Input cannot be empty." });
-}
-
-
-// --- Backend validation: check max length ---
-  const MAX_LENGTH = 50000; // 50k characters
-  if (text.length > MAX_LENGTH) {
-    return res.status(400).json({
-      error: `Input exceeds maximum allowed length of ${MAX_LENGTH} characters.`,
-    });
-  }
-
-  // --- Backend validation: check max length ---
-  const MIN_LENGTH = 1000; // minimum characters for a chapter
-  if (text.length < MIN_LENGTH) {
-    return res.status(400).json({
-      error: `Chapter is too short. Minimum length is ${MIN_LENGTH} characters.`
-    })
-  }
-
-
-  // const chapterHash = hashFunction(text); // simple hash of text content
-
-  // // Serve from cache if exists
-  // if (cache[chapterHash]) {
-  //   console.log("Serving from cache:", chapterHash);
-  //   return res.json({ output: cache[chapterHash], cached: true });
-  // }
-
-
-  // // --- 1 request per day logic ---
-  // const now = Date.now();
-  // const oneDay = 24 * 60 * 60 * 1000;
-
-  // if (userId && dailyUsage[userId]) {
-  //   const lastRequest = dailyUsage[userId];
-  //   if (now - lastRequest < oneDay) {
-  //     return res.status(429).json({
-  //       error: "You’ve reached your daily limit. Subscribe for $5/month to generate notes unlimitedly.",
-  //     });
-  //   }
-  // }
-
-  // // Record current request
-  // if (userId) dailyUsage[userId] = now;
-
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // or "gpt-4"
-      messages: [
-        {
-          role: "system",
-          content: `You are an AI study assistant.
+    const { text, userId } = req.body;
+
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: "Input cannot be empty." });
+    }
+
+    const textLen = text.length;
+
+    if (userId) {
+      // Get user from SQLite
+      const user = db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found." });
+      }
+
+      // Reset usage
+      resetUsage(user);
+
+      // Limits
+      const freeDailyLimit = 1000;
+      const freeMonthlyLimit = 30000;
+      const subMonthlyLimit = 50000;
+
+      if (!user.subscribed) {
+        if (user.dailyCharacters + textLen > freeDailyLimit) {
+          return res.status(429).json({ error: "Daily limit reached." });
+        }
+        if (user.monthlyCharacters + textLen > freeMonthlyLimit) {
+          return res.status(429).json({ error: "Monthly limit reached." });
+        }
+      } else {
+        if (user.monthlyCharacters + textLen > subMonthlyLimit) {
+          return res.status(429).json({ error: "Monthly limit reached. Please contact us." });
+        }
+      }
+
+      // Update usage in memory
+      user.dailyCharacters += textLen;
+      user.monthlyCharacters += textLen;
+
+      // Save to SQLite
+      db.prepare(`
+        UPDATE users
+        SET dailyCharacters = ?, monthlyCharacters = ?, dailyReset = ?, monthlyReset = ?
+        WHERE id = ?
+      `).run(
+        user.dailyCharacters,
+        user.monthlyCharacters,
+        user.dailyReset,
+        user.monthlyReset,
+        userId
+      );
+    }
+  // ----------------- OpenAI call -----------------
+    const response = await openai.responses.create({
+  model: "gpt-4.1-mini",
+  input: [
+        { role: "system", content: `You are an AI study assistant.
 
 The user is an undergraduate student. 
 The input is a textbook chapter.
@@ -159,27 +162,18 @@ A: [clear, direct answer in 2–3 sentences]
 - Do NOT add extra sections.
 - Do NOT exceed the specified number of bullets in any section.
 - Do NOT include opinions, commentary, or meta explanations.
-- Avoid repeating the same information across sections; each section must add new value.`,
-        },
-        {
-          role: "user",
-          content: text,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
+- Avoid repeating the same information across sections; each section must add new value.`, },
+        { role: "user", content: text }
+  ],
+});
 
-    // Get the AI message
-    const notes = response.choices[0].message.content;
-
-    // Store in cache
-  // cache[chapterHash] = notes;
+const notes = response.output_text ?? "No output generated.";
 
     res.json({ output: notes, cached: false });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ output: "Error generating notes" });
+    console.error("🔥 SERVER ERROR:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -226,5 +220,8 @@ app.post("/api/extract-text", upload.single("file"), async (req, res) => {
     res.status(500).json({ error: "Failed to extract text from PDF" });
   }
 });
+
+app.post("/auth/signup", signupHandler);
+app.post("/auth/login", loginHandler);
 
 export default app;

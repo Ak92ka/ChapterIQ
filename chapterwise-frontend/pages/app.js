@@ -117,47 +117,86 @@ await generateNotes(text);
 
 };
 
+// Function to track guest usage
+function updateGuestUsage(chars) {
+  const today = new Date().toISOString().split("T")[0];
+  let guestUsage = JSON.parse(localStorage.getItem("guestUsage") || "{}");
+
+  if (guestUsage.date !== today) {
+    guestUsage = { date: today, used: 0 };
+  }
+
+  guestUsage.used += chars;
+  localStorage.setItem("guestUsage", JSON.stringify(guestUsage));
+  return guestUsage.used;
+}
+
+
+
+
 // Separate function to call /generate-notes
 const generateNotes = async (chapterText, fromPDF = false) => {
   setLoading(true);
   setAiOutput("");
 
   try {
-    let userId = localStorage.getItem("userId");
-    if (!userId) {
-      userId = crypto.randomUUID();
-      localStorage.setItem("userId", userId);
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    // Only include userId if logged in
+    const payload = { text: chapterText };
+    if (user?.id) payload.userId = user.id;
+
+    // --------------------- GUEST LIMIT CHECK ---------------------
+    if (!payload.userId) {
+      const guestUsage = JSON.parse(localStorage.getItem("guestUsage") || "{}");
+      const today = new Date().toISOString().split("T")[0];
+
+      if (guestUsage.date !== today) {
+        guestUsage.date = today;
+        guestUsage.used = 0;
+      }
+
+      const guestDailyLimit = 1000;
+
+      if ((guestUsage.used + chapterText.length) > guestDailyLimit) {
+        setAiOutput("Guest limit reached. Please signup for more usage.");
+        setIsAiOutput(false);
+        setLoading(false);
+        return;
+      }
+
+      guestUsage.used += chapterText.length;
+      localStorage.setItem("guestUsage", JSON.stringify(guestUsage));
     }
 
+    // --------------------- API CALL ---------------------
     const res = await fetch("http://localhost:5000/api/generate-notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: chapterText, userId }),
+      body: JSON.stringify(payload),
     });
 
-    if (res.status === 429) {
-      const data = await res.json();
-      setAiOutput(data.error);
-      setIsAiOutput(false);
-    } else if (!res.ok) {
-      setAiOutput("Error: Could not generate notes.");
-      setIsAiOutput(false);
-    } else {
-      const data = await res.json();
-      setAiOutput(data.output);
-      setIsAiOutput(true);
+    const data = await res.json();
 
-      setTimeout(() => {
-        successRef.current?.focus();
-      }, 100);
+    if (!res.ok) {
+      setAiOutput(data.error || "Error: Could not generate notes.");
+      setIsAiOutput(false);
+      return;
     }
+
+    setAiOutput(data.output);
+    setIsAiOutput(true);
+
+    setTimeout(() => {
+      successRef.current?.focus();
+    }, 100);
   } catch (err) {
     console.error(err);
     setAiOutput("Error: Could not connect to server.");
     setIsAiOutput(false);
   } finally {
     setLoading(false);
-    if (!fromPDF) setText("");  // <-- only clear textarea for non-PDF
+    if (!fromPDF) setText("");
     generateButtonRef.current?.blur();
   }
 };
@@ -449,8 +488,6 @@ const handleDownloadPDF = () => {
   )}
               </div>
               {/* character count */}
-              {/* Validation: check text length, prevent empty submission. */}
-              {/* file upload (PDF, DOCX) support. */}
               <button
                 ref={generateButtonRef}
                 onClick={handleSummarize}
@@ -472,8 +509,6 @@ const handleDownloadPDF = () => {
             <p className="error-message">{aiOutput}</p>
           )}
 
-          {/* Disabled while AI is processing */}
-          {/* Show a spinner or “Generating notes…” message while API call is in progress. */}
           {/* Error message handling (e.g., network errors, API errors). */}
           {isAiOutput && aiOutput && (
             <>

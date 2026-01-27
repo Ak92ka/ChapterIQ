@@ -215,3 +215,179 @@ background-color: #8172F8;
   align-items: center;
   gap: 10px;
 }
+
+.Signup-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+     padding: 16px 26px 16px 26px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  margin-bottom: 32px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.Signup-container h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.Signup-container label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.Signup-container input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.Signup-container input:focus {
+  border-color: #5b7cff;
+}
+
+.Signup-container button {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #5b7cff;
+  color: #fff;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.Signup-container button:hover {
+  background: #4a63e0;
+  transform: translateY(-1px);
+}
+
+.Signup-container .message {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 16px;
+  min-height: calc(100vh - 160px); /* adjusts for header + footer */
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.auth-card input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.auth-card input:focus {
+  border-color: #5b7cff;
+}
+
+.auth-card button {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #5b7cff;
+  color: #fff;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.auth-card button:hover {
+  background: #4a63e0;
+  transform: translateY(-1px);
+}
+
+.auth-card .error {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.account-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.account-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.account-card p {
+  margin: 10px 0;
+}
+
+.subscribe-btn {
+  margin-top: 16px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: #6b5bff;
+  color: #fff;
+  font-weight: 700;
+}
+
