@@ -34,8 +34,8 @@ const handleSubscribe = async () => {
   return (
     <>
       <Head>
-        <title>ChapterWise Pricing</title>
-        <meta name="description" content="ChapterWise pricing plans" />
+        <title>ChapterIQ Pricing</title>
+        <meta name="description" content="ChapterIQ pricing plans" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 

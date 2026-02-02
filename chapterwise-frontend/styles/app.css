@@ -395,23 +395,97 @@ background-color: #8172F8;
 .account-card {
   padding: 24px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(145deg, #ffffff, #f5f5f5);
+  border: 1px solid rgba(0,0,0,0.08);
   box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 
 .account-card p {
   margin: 10px 0;
 }
 
+.account-card p strong {
+  color: #333;
+}
+
+.account-card p.status {
+  font-weight: 700;
+  color: #27ae60; /* green for active subscription */
+}
+
+.account-card p.status.inactive {
+  color: #e74c3c; /* red for inactive subscription */
+}
+
+
 .subscribe-btn {
   margin-top: 16px;
+  padding: 14px 24px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #8172F8;
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.subscribe-btn:hover {
+  background: #6b5bff;
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background-color: #ff6b6b;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #ff3434;
+}
+
+.reactivate-btn {
+  margin-top: 8px;
   padding: 12px 18px;
   border-radius: 12px;
   border: none;
   cursor: pointer;
-  background: #6b5bff;
+  background: #28a745; /* green for "positive action" */
   color: #fff;
   font-weight: 700;
 }
+.reactivate-btn:hover {
+  background: #218838;
+}
+
+
+
+.forgot-password a {
+  font-size: 0.9rem;
+  color: #666;
+  text-decoration: underline;
+}
+
+.forgot-password a:hover {
+  color: #000;
+}
+
+.forgot-password-title {
+  font-size: 24px!important;
+}
+
+.reset-password-title {
+  font-size: 24px!important;
+}
+
 

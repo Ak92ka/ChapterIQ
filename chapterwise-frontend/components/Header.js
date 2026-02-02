@@ -21,12 +21,26 @@ export default function Header() {
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+  try {
+    // Call backend logout endpoint
+    await fetch("http://localhost:5000/auth/logout", {
+      method: "POST",
+      credentials: "include", // important to send cookies
+    });
+
+    // Clear localStorage
     localStorage.removeItem("user");
-    localStorage.removeItem("userId"); // optional if you use it elsewhere
+    localStorage.removeItem("userId"); 
     setUser(null);
+
+    // Redirect to home
     window.location.href = "/";
-  };
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+
 
   return (
     <header className="header-container">

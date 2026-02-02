@@ -16,7 +16,7 @@ export default function Footer() {
       {/* social media icons */}
       {/* language selector */}
       <a className="p-footer-14">Cookie settings</a>
-      <p className="p-footer-14 copyright">@ 2026 ChapterWise</p>
+      <p className="p-footer-14 copyright">@ 2026 ChapterIQ</p>
       <ul>
         <li className="list-headline">Company</li>
          <a href="about-us"><li>About us</li></a>

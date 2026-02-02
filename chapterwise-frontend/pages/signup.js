@@ -58,8 +58,8 @@ export default function SignupPage() {
   return (
     <>
       <Head>
-        <title>ChapterWise - Contact</title>
-        <meta name="description" content="Contact ChapterWise team" />
+        <title>ChapterIQ - Contact</title>
+        <meta name="description" content="Contact ChapterIQ team" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

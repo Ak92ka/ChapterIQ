@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
-import crypto from "crypto";
-import fs from "fs";
+// import crypto from "crypto";
+// import fs from "fs";
 import pkg from "pdfjs-dist/legacy/build/pdf.js";
 const { getDocument } = pkg;
 import multer from "multer";
@@ -14,6 +14,11 @@ import db from "./db.js";
 import Stripe from "stripe";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
+import forgotPassword from "./auth/forgotPassword.js";
+import resetPassword from "./auth/resetPassword.js";
+import { authenticate } from "./middlewares/auth.js";
+import cookieParser from "cookie-parser";
+import logoutHandler from "./auth/logout.js";
 
 
 
@@ -29,7 +34,7 @@ app.post(
     let event;
 
     try {
-      // Verify the webhook signature
+      // Verify webhook signature
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
@@ -40,59 +45,73 @@ app.post(
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle checkout.session.completed
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       console.log("Checkout session completed:", session.id);
       console.log("Customer email:", session.customer_email);
 
-      // Look up user in your SQLite DB
-      const user = db
-        .prepare("SELECT * FROM users WHERE email = ?")
-        .get(session.customer_email);
+      // Lookup user
+      const user = db.prepare("SELECT * FROM users WHERE email = ?").get(session.customer_email);
+      if (!user) {
+        console.log("User not found for email:", session.customer_email);
+        return res.json({ received: true });
+      }
 
-      console.log("Found user:", user);
+      const now = new Date();
+      let subscriptionEnd = new Date();
+      let interval = "month";
+      let priceName = "Plus";
+      let priceAmount = "$5";
+      let billingInterval = "monthly";
 
-      if (user) {
-        const now = new Date();
-        let subscriptionEnd = new Date();
-
-        // Fetch full subscription object from Stripe to get plan interval
+      // Try fetching full subscription from Stripe
+      if (session.subscription) {
         try {
           const subscription = await stripe.subscriptions.retrieve(session.subscription);
-          const interval = subscription.items.data[0].plan.interval; // "month" or "year"
+          if (subscription.items.data.length > 0) {
+            const plan = subscription.items.data[0].plan;
+            interval = plan.interval || "month";
+            priceName = plan.nickname || "Plus";
+            priceAmount = `$${plan.amount / 100}`;
+            billingInterval = interval === "year" ? "yearly" : "monthly";
 
-          if (interval === "year") {
-            subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
-          } else {
-            subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+            if (interval === "year") {
+              subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
+            } else {
+              subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+            }
           }
-
         } catch (err) {
           console.error("Failed to fetch subscription from Stripe:", err);
           // fallback to 1 month
           subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
         }
-
-        // Update user in DB
-        db.prepare(`
-          UPDATE users
-          SET subscribed = 1,
-              subscribedAt = ?,
-              subscribedUntil = ?,
-              stripeSubscriptionId = ?
-          WHERE id = ?
-        `).run(
-          now.toISOString(),
-          subscriptionEnd.toISOString(),
-          session.subscription,
-          user.id
-        );
-
-        console.log(`Updated subscription for user ${user.id} until ${subscriptionEnd}`);
       } else {
-        console.log("User not found for email:", session.customer_email);
+        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
       }
+
+      // Update user in DB
+      db.prepare(`
+        UPDATE users
+        SET subscribed = 1,
+            subscribedAt = ?,
+            subscribedUntil = ?,
+            stripeSubscriptionId = ?,
+            planName = ?,
+            planPrice = ?,
+            billingInterval = ?
+        WHERE id = ?
+      `).run(
+        now.toISOString(),
+        subscriptionEnd.toISOString(),
+        session.subscription || null,
+        priceName,
+        priceAmount + " / " + billingInterval,
+        billingInterval,
+        user.id
+      );
+
+      console.log(`Updated subscription for user ${user.id} until ${subscriptionEnd}`);
     }
 
     res.json({ received: true });
@@ -100,8 +119,12 @@ app.post(
 );
 
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000", // frontend origin
+  credentials: true, // <-- allows cookies to be sent
+}));
 app.use(express.json({ limit: "5mb" }));
+app.use(cookieParser());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -285,27 +308,40 @@ const notes = response.output_text ?? "No output generated.";
 });
 
 app.post("/api/grant-subscription", (req, res) => {
-  const { userId } = req.body;
+  const { userId, planName = "Plus", planPrice = "$5 / month", billingInterval = "monthly" } = req.body;
   const now = new Date();
-  const thirtyDaysLater = new Date(now.getTime() + 30*24*60*60*1000);
+  const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   db.prepare(`
     UPDATE users
-    SET subscribed = 1, subscribedAt = ?, subscribedUntil = ?
+    SET subscribed = 1,
+        subscribedAt = ?,
+        subscribedUntil = ?,
+        planName = ?,
+        planPrice = ?,
+        billingInterval = ?
     WHERE id = ?
-  `).run(now.toISOString(), thirtyDaysLater.toISOString(), userId);
+  `).run(
+    now.toISOString(),
+    thirtyDaysLater.toISOString(),
+    planName,
+    planPrice,
+    billingInterval,
+    userId
+  );
 
-  res.json({ message: "Subscription granted for 30 days" });
+  res.json({ message: `Subscription granted for 30 days (${planName}, ${planPrice})` });
 });
 
 
-app.get("/api/me", authenticateToken, (req, res) => {
-  // JWT payload has user ID
+
+app.get("/api/me", authenticate, (req, res) => {
   const userId = req.user.id;
 
   const user = db
     .prepare(`
-      SELECT id, name, email, subscribed, subscribedAt, subscribedUntil, cancelAtPeriodEnd
+      SELECT id, name, email, subscribed, subscribedAt, subscribedUntil, cancelAtPeriodEnd,
+             planName, planPrice, billingInterval
       FROM users
       WHERE id = ?
     `)
@@ -313,9 +349,13 @@ app.get("/api/me", authenticateToken, (req, res) => {
 
   if (!user) return res.status(404).json({ error: "User not found" });
 
+  // dates and booleans should be consistent
   user.subscribedAt = user.subscribedAt || null;
   user.subscribedUntil = user.subscribedUntil || null;
   user.cancelAtPeriodEnd = !!user.cancelAtPeriodEnd;
+  user.planName = user.planName || null;
+  user.planPrice = user.planPrice || null;
+  user.billingInterval = user.billingInterval || null;
 
   res.json(user);
 });
@@ -436,6 +476,37 @@ app.post("/api/cancel-subscription", async (req, res) => {
   }
 });
 
+// POST /api/reactivate-subscription
+app.post("/api/reactivate-subscription", async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user.stripeSubscriptionId || !user.cancelAtPeriodEnd) {
+      return res.status(400).json({ error: "No canceled subscription to reactivate" });
+    }
+
+    // Tell Stripe to continue subscription
+    const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+      cancel_at_period_end: false
+    });
+
+    // Update DB
+    db.prepare(`
+      UPDATE users
+      SET cancelAtPeriodEnd = 0
+      WHERE id = ?
+    `).run(userId);
+
+    res.json({ message: "Subscription reactivated", current_period_end: subscription.current_period_end });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to reactivate subscription" });
+  }
+});
+
+
 // Protect routes
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -451,6 +522,11 @@ export function authenticateToken(req, res, next) {
     res.status(403).json({ error: "Invalid or expired token." });
   }
 }
+
+app.post("/auth/forgot-password", forgotPassword);
+app.post("/auth/reset-password", resetPassword);
+
+app.post("/auth/logout", logoutHandler);
 
 
 export default app;

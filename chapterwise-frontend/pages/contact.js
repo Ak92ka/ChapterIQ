@@ -10,7 +10,7 @@ export default function ContactForm() {
     user_name: "",
     user_email: "",
     message: "",
-    to_name: "ChapterWise Team",
+    to_name: "ChapterIQ Team",
   });
 
   const [status, setStatus] = useState("");
@@ -61,7 +61,7 @@ export default function ContactForm() {
 
       console.log("Email sent:", result.text);
       setStatus("Message sent successfully!");
-      setFormData({ user_name: "", user_email: "", message: "", to_name: "ChapterWise Team" });
+      setFormData({ user_name: "", user_email: "", message: "", to_name: "ChapterIQ Team" });
     } catch (error) {
       console.error("Email send error:", error);
       setStatus("Failed to send message. Try again later.");
@@ -71,8 +71,8 @@ export default function ContactForm() {
   return (
     <>
       <Head>
-        <title>ChapterWise - Contact</title>
-        <meta name="description" content="Contact ChapterWise team" />
+        <title>ChapterIQ - Contact</title>
+        <meta name="description" content="Contact ChapterIQ team" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -23,6 +23,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -62,8 +63,8 @@ export default function Login() {
   return (
     <>
       <Head>
-        <title>ChapterWise - Login</title>
-        <meta name="description" content="Login to ChapterWise" />
+        <title>ChapterIQ - Login</title>
+        <meta name="description" content="Login to ChapterIQ" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -93,6 +94,11 @@ export default function Login() {
                   required
                 />
               </label>
+
+              <p className="forgot-password">
+  <a href="/forgot-password">Forgot password?</a>
+</p>
+
 
               {error && <p className="error">{error}</p>}
 

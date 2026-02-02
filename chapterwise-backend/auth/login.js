@@ -3,8 +3,7 @@ import db from "../db.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-dotenv.config();  // <--- must run before using process.env
-
+dotenv.config();
 
 export default async function loginHandler(req, res) {
   const { email, password } = req.body;
@@ -28,8 +27,17 @@ export default async function loginHandler(req, res) {
     { expiresIn: process.env.JWT_EXPIRATION || "7d" }
   );
 
+  // Set JWT in a secure, HttpOnly cookie
+  res.cookie("token", token, {
+    httpOnly: true,               // JS cannot read this cookie
+    // secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
+    secure: false,
+    sameSite: "Strict",           // protects against CSRF
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  });
+
+  // Return user info separately (without token)
   res.status(200).json({
-    token, // <- frontend will store this in localStorage
     id: user.id,
     name: user.name,
     email: user.email,
