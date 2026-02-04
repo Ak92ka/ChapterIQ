@@ -254,7 +254,6 @@ const handleReset = () => {
         const arrayBuffer = await file.arrayBuffer();
         const zip = await JSZip.loadAsync(arrayBuffer);
         let pptText = "";
-
         const slideFiles = Object.keys(zip.files).filter(
           (f) => f.startsWith("ppt/slides/slide") && f.endsWith(".xml")
         );
