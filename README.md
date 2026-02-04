@@ -1,2 +1,2 @@
-# ChapterWise
-AI-powered exam-ready textbook summaries
+# ChapterIQ
+Exam-ready textbook summaries in seconds
