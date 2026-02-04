@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "chapteriq-backend",
+      "path": "chapteriq-backend",
+      "build": {
+        "builder": "node",
+        "command": "npm install"
+      },
+      "start": {
+        "command": "npm start"
+      }
+    }
+  ]
+}
