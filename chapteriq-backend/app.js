@@ -29,11 +29,20 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // ---------------- PostgreSQL Connection ----------------
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  host: "db.puqbswqrndbujevktbof.supabase.co",
-  port: 5432,
-  ssl: { rejectUnauthorized: false },
-  family: 6 // 6 = IPv6
+  ssl: { rejectUnauthorized: false }, // Supabase requires this
 });
+
+async function testDBConnection() {
+  try {
+    await db.query("SELECT 1");
+    console.log("✅ DB connection successful!");
+  } catch (err) {
+    console.error("❌ DB connection failed:", err.message);
+  }
+}
+
+// Test connection immediately
+testDBConnection();
 
 // Helper to query a single row
 async function querySingle(text, params) {
