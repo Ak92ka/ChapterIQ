@@ -154,8 +154,10 @@ app.post("/api/generate-notes", async (req, res) => {
         user.subscribed = false;
       }
 
-      const freeDailyLimit = 1000;
-      const freeMonthlyLimit = 300000;
+      // const freeDailyLimit = 1000;
+      // const freeMonthlyLimit = 30000;
+      const freeDailyLimit = 1000000; // dev
+      const freeMonthlyLimit = 3000000; // dev
       const subMonthlyLimit = 50000;
 
       const textLen = text.length;
