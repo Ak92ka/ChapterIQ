@@ -28,8 +28,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ---------------- PostgreSQL Connection ----------------
 const db = new Pool({
-  connectionString: process.env.DATABASE_URL, // Railway/PostgreSQL URL
-  ssl: { rejectUnauthorized: false }, // required on Railway
+  connectionString: process.env.DATABASE_URL, // Supabase/PostgreSQL URL
+  ssl: { rejectUnauthorized: false }, // required on Supabase
 });
 
 // Helper to query a single row

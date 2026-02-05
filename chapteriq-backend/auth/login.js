@@ -27,14 +27,23 @@ export default async function loginHandler(req, res) {
     { expiresIn: process.env.JWT_EXPIRATION || "7d" }
   );
 
-  // Set JWT in a secure, HttpOnly cookie
+  // // Set JWT in a secure, HttpOnly cookie (dev)
+  // res.cookie("token", token, {
+  //   httpOnly: true,               // JS cannot read this cookie
+  //   // secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
+  //   secure: false,
+  //   sameSite: "Strict",           // protects against CSRF
+  //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  // });
+
+
+    // // Set JWT in a secure, HttpOnly cookie (prod)
   res.cookie("token", token, {
-    httpOnly: true,               // JS cannot read this cookie
-    // secure: process.env.NODE_ENV === "production", // only send over HTTPS in prod
-    secure: false,
-    sameSite: "Strict",           // protects against CSRF
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-  });
+  httpOnly: true,              
+  secure: process.env.NODE_ENV === "production", // enable HTTPS-only cookies
+  sameSite: "Strict",          
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 
   // Return user info separately (without token)
   res.status(200).json({
